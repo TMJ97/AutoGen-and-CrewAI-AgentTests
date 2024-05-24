@@ -70,8 +70,8 @@ carry_out_data_analysis = Task(
 
 # 4. Creating a Crew with CLI focus (alt: "process=Process.hierachical,")
 data_crew = Crew(
-    agents=[data_analyst_planner],
-    tasks=[read_and_plan_data_analysis],
+    agents=[data_analyst_planner, data_analyst_executor],
+    tasks=[read_and_plan_data_analysis, carry_out_data_analysis],
     process=Process.sequential, 
     manager_llm=llm,
     verbose=True,
