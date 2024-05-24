@@ -22,6 +22,7 @@ interpreter.auto_run = True
 interpreter.llm.model = "openai/" + model_name
 #interpreter.llm.context_window = {token limit}
 #interpreter.llm.max_tokens = {max tokens per response}
+interpreter.llm.max_retries = 20
 
 class CLITool:
     @tool("Executor")
