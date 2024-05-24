@@ -5,7 +5,7 @@
 import os
 from dotenv import load_dotenv
 from crewai import Agent, Task, Crew, Process
-from crewai_tools import CSVSearchTool
+from crewai_tools import CSVSearchTool, FileReadTool
 from interpreter import interpreter
 from langchain.tools import tool
 from langchain_openai import ChatOpenAI
@@ -31,72 +31,42 @@ class CLITool:
         return result
     
 CSVSearchTool = CSVSearchTool(csv="C:/Users/TimJ1/Downloads/Financial-Sample-Much-Shortened.csv")
+FileReadTool = FileReadTool(file_path="C:/Users/TimJ1/Downloads/Financial-Sample-Much-Shortened.csv")
+
 
 # 2. Creating Agents
-# data_analyst = Agent(
-#     role='Financial Data Analyst',
-#     goal='Ability to plan an analysis of given input data (a CSV file). Read the CSV file using the CSVSearchTool. Create a comprehensive plan for EDA (exploratory data analysis). And summarize the data, creating bullet-points',
-#     backstory='Expert business analyst and data scientist, able to perform comprehensive data analysis for any given type of financial data in a CSV file.',
-#     tools=[CSVSearchTool, CLITool.execute_cli_command],
-#     verbose=True,
-#     allow_delegation=True,
-# )
-
 data_analyst_planner = Agent(
     role='Financial Data Analyst Planner',
-    goal='Ability to plan an analysis of given input data (a CSV file). Read the entirety of the CSV file using the CSVSearchTool. Summarize the data. Create a comprehensive plan for EDA (exploratory data analysis). Pass this data analysis summarization and plan on to the next agent',
+    goal='Ability to plan an analysis of given input data (a CSV file). Read the entirety of the CSV file using the FileReadTool. Summarize the data. Create a comprehensive plan for EDA (exploratory data analysis). Pass this data analysis summarization and plan on to the next agent',
     backstory='Expert business analyst and data scientist, able to perform comprehensive data analysis for any given type of financial data in a CSV file.',
-    tools=[CSVSearchTool],
+    tools=[FileReadTool],
     verbose=True,
     allow_delegation=True,
 )
 
 data_analyst_executor = Agent(
     role='Financial Data Analyst Executor',
-    goal='Receive a summary of data for analysis and a corresponding data analysis plan. First, you receive the summary and plan as a string. Then you access and query for the entire file content using the CSVSearchTool (all of the data must be included in the analysis). Then you write and run code to analyse the data, using the Executor tool. Finally, you can then evaluate the code results and ultimately complete the data analysis, returning bullet-point observations, insights and even recommendations.',
+    goal='Receive a summary of data for analysis and a corresponding data analysis plan. First, you receive the summary and plan as a string. Then you can access the entire file using the FileReadTool (all of the data must be included in the analysis). Then you write and run code to analyse the data (access any time with FileReadTool, perhaps storing it somewhere you can remember it or access it with the code), using the Executor tool. Finally, you can then evaluate the code results and ultimately complete the data analysis, returning bullet-point observations, insights and even recommendations.',
     backstory='Expert business analyst and data scientist, able to receive a comprehensive data analysis plan and run analysis code for any given type of input data in a CSV file, ultimately finishing an exploratory data analysis.',
-    tools=[CSVSearchTool, CLITool.execute_cli_command],
+    tools=[FileReadTool, CLITool.execute_cli_command],
     verbose=True,
     allow_delegation=True,
 )
 
-# cli_agent = Agent(
-#     role='Software Engineer',
-#     goal='Ability to perform CLI operations, write programs and execute using Executor Tool.',
-#     backstory='Expert in command line operations and automating tasks.',
-#     tools=[CLITool.execute_cli_command],
-#     verbose=True,
-#     allow_delegation=True,
-# )
-
 # 3. Defining Tasks
 read_and_plan_data_analysis = Task(
-    description='Read and summarize the entirety of the given file contents, using the CSVSearchTool and the file path the tool already has. Return both a summary of the data and a comprehensive data analysis plan for this type of data.',
+    description='Read and summarize the entirety of the given file contents, using the FileReadTool. Return both a summary of the data and a comprehensive data analysis plan for this type of data.',
     expected_output='A summary of the data in the file and a comprehensive data analysis plan.',
     agent=data_analyst_planner,
-    tools=[CSVSearchTool],
+    tools=[FileReadTool],
 )
 
 carry_out_data_analysis = Task(
-    description='Based on the received information (summary of data for analysis and a comprehensive data analysis plan), write and run code using the Executor tool to complete the data analysis and return final results including observations, insights and recommendations. Access the input data via the CSVSearchTool, querying for the entire file content as all of it is relevant.',
+    description='Based on the received information (summary of data for analysis and a comprehensive data analysis plan), write and run code using the Executor tool to complete the data analysis and return final results including observations, insights and recommendations. Access the input data via the FileReadTool, reading the entire file content as all of it is relevant.',
     expected_output='The results of the comprehensive data analysis including observations, insights, as well as considerations, thoughts, and recommendations.',
     agent=data_analyst_executor,
-    tools=[CSVSearchTool, CLITool.execute_cli_command],
+    tools=[FileReadTool, CLITool.execute_cli_command],
 )
-
-# read_input_file = Task(
-#     description='Read the contents of the input file (financial data in a CSV file)',
-#     expected_output='A summary of the data in the file',
-#     agent=data_analyst,
-#     tools=[CSVSearchTool, CLITool.execute_cli_command],
-# )
-
-# cli_task = Task(
-#     description='Identify the OS and some system info on this Windows machine',
-#     expected_output='A printable string, status on the results of your task, i.e. information about my OS, etc.',
-#     agent=cli_agent,
-#     tools=[CLITool.execute_cli_command],
-# )
 
 # 4. Creating a Crew with CLI focus (alt: "process=Process.hierachical,")
 data_crew = Crew(
@@ -107,23 +77,6 @@ data_crew = Crew(
     verbose=True,
 )
 
-# data_crew = Crew(
-#     agents=[data_analyst],
-#     tasks=[read_input_file],
-#     process=Process.sequential, 
-#     manager_llm=llm,
-#     verbose=True,
-# )
-
-# cli_crew = Crew(
-#     agents=[cli_agent],
-#     tasks=[cli_task],
-#     process=Process.sequential, 
-#     manager_llm=llm,
-#     verbose=True
-# )
-
 # 5. Run the Crew (opt: input in kickoff param)
 result = data_crew.kickoff()
-#result = cli_crew.kickoff()
 Markdown(result)
