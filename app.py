@@ -15,7 +15,7 @@ from IPython.display import Markdown
 load_dotenv() #.env file might not be in use...
 openai_api_key = os.getenv("OPENAI_API_KEY")
 model_name = "gpt-3.5-turbo-0125"
-temp = 0.5
+temp = 0
 
 llm = ChatOpenAI(model=model_name, temperature=temp, api_key=openai_api_key) #Could leave out API key if specified in ENV variables.
 interpreter.auto_run = True
