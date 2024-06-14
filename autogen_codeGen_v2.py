@@ -48,8 +48,10 @@ user_proxy = autogen.UserProxyAgent(
 # with open(file_path, "r") as file:
 #     file_content = file.read()
 
-problem_to_solve = """
-Perform write and run code to perform financial data analysis on this file "Financial-Sample-Much-Shortened.csv"
+filepath = "C:\\Users\\TimJ1\\Documents\\Financial_Sample_Much_Shortened.csv" #\-character must be escaped with a \
+
+problem_to_solve = f"""
+Download the file here, {filepath}, and perform financial data analysis on the file. Write and run code to ensure precision. Output analysis results and insights.
 """
 
 # the assistant receives a message from the user, which contains the task description
